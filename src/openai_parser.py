@@ -29,7 +29,7 @@ class OpenAIParser:
         openai.api_key = self.config_dict["openai_api_key"]
 
     def _get_single_response(self, message):
-        response = openai.ChatCompletion.create(model = "gpt-3.5-turbo",
+        response = openai.ChatCompletion.create(model = "gpt-4",
                                             messages = [
                                                 {"role": "system", "content": "You are a helpful assistant"},
                                                 {"role": "user", "content": message}
@@ -39,7 +39,7 @@ class OpenAIParser:
     def get_response(self, userid, context_messages):
         context_messages.insert(0, {"role": "system", "content": "You are a helpful assistant"})
         try:
-            response = openai.ChatCompletion.create(model = "gpt-3.5-turbo",
+            response = openai.ChatCompletion.create(model = "gpt-4",
                                                 messages = context_messages)
             return (response["choices"][0]["message"]["content"], response["usage"]["total_tokens"])
         except Exception as e:
