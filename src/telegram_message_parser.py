@@ -55,6 +55,7 @@ class TelegramMessageParser:
         self.bot.add_handler(CommandHandler("clear", self.clear_context))
         self.bot.add_handler(CommandHandler("getid", self.get_user_id))
         self.bot.add_handler(CommandHandler("usage", self.usage))
+        self.bot.add_handler(CommandHandler("system", self.system))
 
         # special message handlers
         if self.config_dict["enable_voice"]:
@@ -359,6 +360,26 @@ class TelegramMessageParser:
     async def usage(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Get OpenAI API usage
         usage = self.message_manager.get_usage()
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=str(usage)
+        )
+
+    async def system(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        # Get or set system message
+
+        # check if user is allowed
+        allowed, _ = self.access_manager.check_user_allowed(str(update.effective_user.id))
+        if not allowed:
+            await context.bot.send_message(
+                chat_id = update.effective_chat.id,
+                text = "Sorry, you are not allowed to use this bot."
+            )
+            return
+
+        message = update.effective_message.text
+        message = message.replace("/system ", "")
+        usage = self.message_manager.handle_system(message)
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=str(usage)

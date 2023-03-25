@@ -31,13 +31,13 @@ class OpenAIParser:
     def _get_single_response(self, message):
         response = openai.ChatCompletion.create(model = "gpt-4",
                                             messages = [
-                                                {"role": "system", "content": "You are a helpful assistant"},
+                                                {"role": "system", "content": self.config_dict["system_message"]},
                                                 {"role": "user", "content": message}
                                             ])
         return response["choices"][0]["message"]["content"]
 
     def get_response(self, userid, context_messages):
-        context_messages.insert(0, {"role": "system", "content": "You are a helpful assistant"})
+        context_messages.insert(0, {"role": "system", "content": self.config_dict["system_message"]})
         try:
             response = openai.ChatCompletion.create(model = "gpt-4",
                                                 messages = context_messages)
@@ -77,6 +77,14 @@ class OpenAIParser:
         usage = req.json()["total_usage"]/100
 
         return usage
+
+    def get_system_message(self):
+        return self.config_dict["system_message"]
+
+    def set_system_message(self, system_message):
+        self.config_dict["system_message"] = system_message
+        with open("config.json", "w") as f:
+            json.dump(self.config_dict, f, indent=4)
 
 if __name__ == "__main__":
     openai_parser = OpenAIParser()

@@ -84,6 +84,18 @@ class MessageManager:
         except Exception as e:
             return f"Error: {e}"
 
+    def handle_system(self, message):
+        """Get or set the configuration of the system message.
+
+        If message is empty, return the current configuration.
+        If message is not empty, set the configuration.
+        """
+        if message == "":
+            return f"Current system message is: {self.openai_parser.get_system_message()}"
+        else:
+            self.openai_parser.set_system_message(message)
+            return f"System message set to: {message}"
+
     def __sendMessage(self, user, messageList):
         ans = self.openai_parser.get_response(user, messageList)
         return ans
