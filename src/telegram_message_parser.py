@@ -359,6 +359,16 @@ class TelegramMessageParser:
 
     async def usage(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Get OpenAI API usage
+
+        # check if user is allowed
+        allowed, _ = self.access_manager.check_user_allowed(str(update.effective_user.id))
+        if not allowed:
+            await context.bot.send_message(
+                chat_id = update.effective_chat.id,
+                text = "Sorry, you are not allowed to use this bot."
+            )
+            return
+
         usage = self.message_manager.get_usage()
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
