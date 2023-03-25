@@ -12,7 +12,7 @@ __email__ = i@flynnoct.com
 __status__ = Dev
 """
 
-from telegram import Update, InlineQueryResultArticle, InputTextMessageContent, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineQueryResultArticle, InputTextMessageContent, InlineKeyboardButton, InlineKeyboardMarkup, BotCommand
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, InlineQueryHandler, ChosenInlineResultHandler, ContextTypes, filters
 import json, os
 from uuid import uuid4
@@ -36,7 +36,7 @@ class TelegramMessageParser:
             self.config_dict = json.load(f)
 
         # init bot
-        self.bot = ApplicationBuilder().token(self.config_dict["telegram_bot_token"]).build()
+        self.bot = ApplicationBuilder().token(self.config_dict["telegram_bot_token"]).post_init(self.post_init).build()
         # add handlers
         self.add_handlers()
 
@@ -50,18 +50,25 @@ class TelegramMessageParser:
         self.bot.run_polling()
 
     def add_handlers(self):
+        self.commands = []
         # command handlers
         self.bot.add_handler(CommandHandler("start", self.start))
+        self.commands.append(BotCommand("start", "Start the bot"))
         self.bot.add_handler(CommandHandler("clear", self.clear_context))
+        self.commands.append(BotCommand("clear", "Clear the context"))
         self.bot.add_handler(CommandHandler("getid", self.get_user_id))
+        self.commands.append(BotCommand("getid", "Get your user id"))
         self.bot.add_handler(CommandHandler("usage", self.usage))
+        self.commands.append(BotCommand("usage", "Get usage of this bot"))
         self.bot.add_handler(CommandHandler("system", self.system))
+        self.commands.append(BotCommand("system", "Get or set system message"))
 
         # special message handlers
         if self.config_dict["enable_voice"]:
             self.bot.add_handler(MessageHandler(filters.VOICE, self.chat_voice))
         if self.config_dict["enable_dalle"]:
             self.bot.add_handler(CommandHandler("dalle", self.image_generation))
+            self.commands.append(BotCommand("dalle", "Generate image from text"))
         self.bot.add_handler(MessageHandler(filters.PHOTO | filters.AUDIO | filters.VIDEO, self.chat_file))
 
         # inline query handler
@@ -77,6 +84,11 @@ class TelegramMessageParser:
 
         # unknown command handler
         self.bot.add_handler(MessageHandler(filters.COMMAND, self.unknown))
+
+    async def post_init(self, application) -> None:
+        bot = application.bot
+
+        await bot.set_my_commands(self.commands)
 
     # normal chat messages
     async def chat_text(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
